@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ASCII Animation</title>
+  <script src="https://cdn.jsdelivr.net/npm/typed.js@2.0.12"></script>
+  <style>
+    body {
+      background: black;
+      color: limegreen;
+      font-family: monospace;
+      white-space: pre;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    #ascii {
+      font-size: 16px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div id="ascii"></div>
+
+  <script>
+    new Typed('#ascii', {
+      strings: [
+        "╔═══╗ ♪\n║███║ ♫\n║ (●) ♫\n╚═══╝♪♪",
+        "ASCII animations\nlook cool in Google Sites!"
+      ],
+      typeSpeed: 50,
+      backSpeed: 25,
+      loop: true
+    });
+  </script>
+</body>
+</html>
