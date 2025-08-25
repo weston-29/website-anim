@@ -52,26 +52,30 @@
     // Array to hold each layer for 3D extrusion
     const layers = [];
     const depth = 5; // number of lower layers
-    const topColor = [109, 51, 255]; // #6d33ff in RGB
 
     for (let i = depth; i > 0; i--) {
       const layer = document.createElement("pre");
       layer.classList.add("ascii-layer");
-      layer.style.top = `${i}px`;
-      layer.style.left = `${i}px`;
+
+      // Keep all layers at the same top/left so they are perfectly aligned
+      layer.style.top = `0px`;
+      layer.style.left = `0px`;
+
+      // Pink fading effect for debugging
       const alpha = i / (depth + 1); // fade lower layers
-      layer.style.color = `rgba(${topColor[0]},${topColor[1]},${topColor[2]},${alpha})`;
+      layer.style.color = `rgba(255, 105, 180, ${alpha})`; // hotpink with fade
+
       layer.textContent = ""; // will fill during typing
       asciiContainer.appendChild(layer);
       layers.push(layer);
     }
 
-    // Top brightest layer
+    // Top brightest layer (hotpink)
     const topLayer = document.createElement("pre");
     topLayer.classList.add("ascii-layer");
     topLayer.style.top = `0px`;
     topLayer.style.left = `0px`;
-    topLayer.style.color = `#6d33ff`;
+    topLayer.style.color = `#ff69b4`; // hotpink
     topLayer.textContent = "";
     asciiContainer.appendChild(topLayer);
     layers.push(topLayer);
