@@ -2,77 +2,102 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Weston Keller ASCII</title>
+  <title>Weston Keller ASCII 3D</title>
   <style>
     body {
       background: white;
-      color: #7A45FF;
-      font-family: monospace;
-      height: 100vh;
       margin: 0;
+      height: 100vh;
       display: flex;
       justify-content: center;
       align-items: center;
-      perspective: 800px;
+      perspective: 800px; /* enable 3D tilt */
       overflow: hidden;
     }
-    #ascii {
-      font-size: 14px;   /* adjust for size */
+    #ascii-container {
+      position: relative;
+      font-family: monospace;
       white-space: pre;
+      line-height: 1;
       text-align: center;
-      transition: transform 0.1s ease-out;
       transform-style: preserve-3d;
     }
-    .cursor {
-      display: inline-block;
-      width: 8px;
-      background: limegreen;
-      animation: blink 0.7s steps(1) infinite;
-    }
-    @keyframes blink {
-      50% { background: transparent; }
+    .ascii-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      pointer-events: none; /* avoid blocking mouse */
     }
   </style>
 </head>
 <body>
-  <pre id="ascii"></pre>
+  <div id="ascii-container"></div>
 
   <script>
-    const ascii = document.getElementById("ascii");
+    const asciiContainer = document.getElementById("ascii-container");
 
-    // The ASCII art to type out
+    // ANSI Shadow for "WESTON KELLER"
     const asciiArt = `
-██     ██ ███████ ███████ ████████  ██████  ███    ██ 
-██     ██ ██      ██        ██     ██    ██ ████   ██ 
-██  █  ██ █████   ███████   ██     ██    ██ ██ ██  ██ 
-██ ███ ██ ██           ██   ██     ██    ██ ██   ████ 
- ███ ███  ███████ ███████   ██      ██████  ██    ███ 
+██     ██ ███████ ███████ ████████  ██████  ███    ██    ██   ██ ███████ ██      ██      ███████ ██████
+██     ██ ██      ██         ██    ██    ██ ████   ██    ██  ██  ██      ██      ██      ██      ██   ██
+██  █  ██ █████   ███████    ██    ██    ██ ██  ██ ██    ██ ██   █████   ██      ██      █████   ███ ██
+██ ███ ██ ██           ██    ██    ██    ██ ██   ████    ██  ██  ██      ██      ██      ██      ██   ██
+ ███ ███  ███████ ███████    ██     ██████  ██    ███    ██   ██ ███████ ███████ ███████ ███████ ██    ██
 `;
 
-    let index = 0;
+    // Split into characters for typing effect
+    let currentIndex = 0;
     const typingSpeed = 5; // ms per character
 
-    function typeArt() {
-      if (index < asciiArt.length) {
-        ascii.textContent = asciiArt.slice(0, index + 1);
-        index++;
-        setTimeout(typeArt, typingSpeed);
+    // Array to hold each layer for 3D extrusion
+    const layers = [];
+    const depth = 5; // number of lower layers
+    const topColor = [109, 51, 255]; // #6d33ff in RGB
+
+    for (let i = depth; i > 0; i--) {
+      const layer = document.createElement("pre");
+      layer.classList.add("ascii-layer");
+      layer.style.top = `${i}px`;
+      layer.style.left = `${i}px`;
+      const alpha = i / (depth + 1); // fade lower layers
+      layer.style.color = `rgba(${topColor[0]},${topColor[1]},${topColor[2]},${alpha})`;
+      layer.textContent = ""; // will fill during typing
+      asciiContainer.appendChild(layer);
+      layers.push(layer);
+    }
+
+    // Top brightest layer
+    const topLayer = document.createElement("pre");
+    topLayer.classList.add("ascii-layer");
+    topLayer.style.top = `0px`;
+    topLayer.style.left = `0px`;
+    topLayer.style.color = `#6d33ff`;
+    topLayer.textContent = "";
+    asciiContainer.appendChild(topLayer);
+    layers.push(topLayer);
+
+    // Typing effect function
+    function typeAscii() {
+      if (currentIndex <= asciiArt.length) {
+        const textSoFar = asciiArt.slice(0, currentIndex);
+        layers.forEach(layer => layer.textContent = textSoFar);
+        currentIndex++;
+        setTimeout(typeAscii, typingSpeed);
       }
     }
 
     // Start typing on load
     window.onload = () => {
-      typeArt();
+      typeAscii();
     };
 
-    // Cursor-driven tilt
+    // Cursor-based tilt
     document.addEventListener("mousemove", (e) => {
-      const { innerWidth, innerHeight } = window;
-      const x = (e.clientX / innerWidth - 0.5) * 2;  // -1 to 1
-      const y = (e.clientY / innerHeight - 0.5) * 2; // -1 to 1
+      const rect = asciiContainer.getBoundingClientRect();
+      const x = ((e.clientX - rect.left) / rect.width - 0.5) * 2; // -1 to 1
+      const y = ((e.clientY - rect.top) / rect.height - 0.5) * 2; // -1 to 1
       const maxTilt = 15; // degrees
-
-      ascii.style.transform = `rotateX(${y * -maxTilt}deg) rotateY(${x * maxTilt}deg)`;
+      asciiContainer.style.transform = `rotateX(${y * -maxTilt}deg) rotateY(${x * maxTilt}deg)`;
     });
   </script>
 </body>
