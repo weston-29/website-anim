@@ -1,114 +1,81 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Weston Keller ASCII</title>
-  <style>
-    body {
-      background: white;
-      color: #7A45FF;
-      font-family: monospace;
-      height: 100vh;
-      margin: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      perspective: 800px;
-      overflow: hidden;
-    }
-    #ascii {
-      font-size: 14px;
-      white-space: pre;
-      text-align: center;
-      transition: transform 0.1s ease-out;
-      transform-style: preserve-3d;
-    }
-    #ascii.settling {
-      transition: transform 1.2s ease-out;
-    }
-    .ascii-line {
-      display: block;
-      transition: transform 0.2s ease-out;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>Weston Keller ASCII</title>
+<style>
+  body {
+    background: white;
+    color: #7A45FF;
+    font-family: monospace;
+    height: 100vh;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    perspective: 800px;
+    overflow: hidden;
+  }
+  #ascii {
+    font-size: 14px;
+    white-space: pre;
+    text-align: center;
+  }
+  .ascii-line {
+    display: block;
+    will-change: transform;
+  }
+</style>
 </head>
 <body>
-  <pre id="ascii"></pre>
-  <script>
-    const ascii = document.getElementById("ascii");
+<pre id="ascii"></pre>
+<script>
+const ascii = document.getElementById("ascii");
 
-    const asciiArt = `
-██     ██ ███████ ███████ ████████  ██████  ███    ██    ██   ██ ███████ ██      ██      ███████ ██████  
-██     ██ ██      ██         ██    ██    ██ ████   ██    ██  ██  ██      ██      ██      ██      ██   ██ 
-██  █  ██ █████   ███████    ██    ██    ██ ██  ██ ██    ██ ██   █████   ██      ██      █████   ███ ██  
-██ ███ ██ ██           ██    ██    ██    ██ ██   ████    ██  ██  ██      ██      ██      ██      ██   ██ 
- ███ ███  ███████ ███████    ██     ██████  ██    ███    ██   ██ ███████ ███████ ███████ ███████ ██    ██
+const asciiArt = `
+██     ██  ██    ██    
+██     ██  ██  ██      
+██  █  ██  ██ ██       
+██ ███ ██  ██  ██      
+ ███ ███   ██    ██  ██
 `;
 
-    const symbols = '!@#$%&/+';
-    const lines = asciiArt.split('\n');
-    const displayLines = lines.map(line => line.split('').map(c => c === ' ' ? ' ' : ' ').join(''));
-    
-    ascii.innerHTML = displayLines.map(line => `<span class="ascii-line">${line}</span>`).join('\n');
+// Split into lines and wrap in spans
+const lines = asciiArt.trim().split('\n');
+ascii.innerHTML = lines.map(line => `<span class="ascii-line">${line}</span>`).join('\n');
+const spans = ascii.querySelectorAll('.ascii-line');
 
-    let iteration = 0;
-    const totalIterations = 30;
+// Physics parameters
+const spring = 0.2;     // How fast it moves toward target
+const damping = 0.7;    // How much it overshoots and settles
+const maxOffset = 30;   // Max lateral px
 
-    function randomSymbol() {
-      return symbols[Math.floor(Math.random() * symbols.length)];
-    }
+let targetX = 0;
 
-    function scramble() {
-      const spans = ascii.querySelectorAll('.ascii-line');
-      spans.forEach((span, i) => {
-        const line = lines[i];
-        let output = '';
-        for (let j = 0; j < line.length; j++) {
-          if (line[j] === '\n') {
-            output += '\n';
-          } else if (Math.random() < (1 - iteration / totalIterations)) {
-            output += randomSymbol();
-          } else {
-            output += line[j];
-          }
-        }
-        span.textContent = output;
-      });
-      iteration++;
-      if (iteration <= totalIterations) {
-        setTimeout(scramble, 50);
-      }
-    }
+// Track cursor
+document.addEventListener("mousemove", (e) => {
+  const { innerWidth } = window;
+  const xNorm = (e.clientX / innerWidth - 0.5) * 2; // -1 to 1
+  targetX = xNorm * maxOffset;
+});
 
-    window.onload = scramble;
+// Animate each line independently
+const lineStates = Array.from(spans).map(() => ({ x: 0, vx: 0 }));
 
-    // Mouse line-level parallax
-    let isMouseInside = false;
-    document.addEventListener("mouseenter", () => {
-      isMouseInside = true;
-      ascii.classList.remove("settling");
-    });
-    document.addEventListener("mouseleave", () => {
-      isMouseInside = false;
-      ascii.classList.add("settling");
-      const spans = ascii.querySelectorAll('.ascii-line');
-      spans.forEach(span => span.style.transform = `translate(${0}px, ${0}px)`);
-      setTimeout(() => ascii.classList.remove("settling"), 1200);
-    });
+function animate() {
+  lineStates.forEach((state, i) => {
+    const factor = (i + 1) / spans.length; // stagger effect
+    const desiredX = targetX * factor;
+    // Spring physics: acceleration = distance * spring
+    const ax = (desiredX - state.x) * spring;
+    state.vx = (state.vx + ax) * damping; // velocity update with damping
+    state.x += state.vx; // update position
+    spans[i].style.transform = `translateX(${state.x}px)`;
+  });
+  requestAnimationFrame(animate);
+}
 
-    document.addEventListener("mousemove", (e) => {
-      if (!isMouseInside) return;
-      const { innerWidth, innerHeight } = window;
-      const x = (e.clientX / innerWidth - 0.5) * 2; // -1 to 1
-      const y = (e.clientY / innerHeight - 0.5) * 2; // -1 to 1
-      const spans = ascii.querySelectorAll('.ascii-line');
-
-      spans.forEach((span, i) => {
-        const factor = (i + 1) / spans.length; // stagger lines slightly
-        const maxOffset = 15; // px
-        span.style.transform = `translate(${x * maxOffset * factor}px, ${y * maxOffset * factor}px)`;
-      });
-    });
-  </script>
+animate();
+</script>
 </body>
 </html>
