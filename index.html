@@ -40,38 +40,81 @@ const asciiArt = `
  ███ ███   ██    ██  ██
 `;
 
-// Split into lines and wrap in spans
+const symbols = '!@#$%&/+';
+
+// Split lines and wrap in spans
 const lines = asciiArt.trim().split('\n');
 ascii.innerHTML = lines.map(line => `<span class="ascii-line">${line}</span>`).join('\n');
 const spans = ascii.querySelectorAll('.ascii-line');
 
-// Physics parameters
-const spring = 0.2;     // How fast it moves toward target
-const damping = 0.7;    // How much it overshoots and settles
-const maxOffset = 30;   // Max lateral px
+// ----- Scramble Animation -----
+let iteration = 0;
+const totalIterations = 30;
 
-let targetX = 0;
+function randomSymbol() {
+  return symbols[Math.floor(Math.random() * symbols.length)];
+}
 
-// Track cursor
-document.addEventListener("mousemove", (e) => {
-  const { innerWidth } = window;
-  const xNorm = (e.clientX / innerWidth - 0.5) * 2; // -1 to 1
-  targetX = xNorm * maxOffset;
-});
+function scramble() {
+  spans.forEach((span, i) => {
+    const line = lines[i];
+    let output = '';
+    for (let j = 0; j < line.length; j++) {
+      if (Math.random() < (1 - iteration / totalIterations)) {
+        output += randomSymbol();
+      } else {
+        output += line[j];
+      }
+    }
+    span.textContent = output;
+  });
+  iteration++;
+  if (iteration <= totalIterations) {
+    setTimeout(scramble, 50);
+  }
+}
 
-// Animate each line independently
+window.onload = scramble;
+
+// ----- Bounce Physics -----
+const spring = 0.2;
+const damping = 0.7;
+const maxOffset = 30;
+
 const lineStates = Array.from(spans).map(() => ({ x: 0, vx: 0 }));
 
+let cursorX = 0;
+let cursorY = 0;
+let isMouseInside = false;
+
+document.addEventListener("mousemove", (e) => {
+  cursorX = e.clientX;
+  cursorY = e.clientY;
+  isMouseInside = true;
+});
+
+document.addEventListener("mouseleave", () => {
+  isMouseInside = false;
+});
+
 function animate() {
-  lineStates.forEach((state, i) => {
-    const factor = (i + 1) / spans.length; // stagger effect
-    const desiredX = targetX * factor;
-    // Spring physics: acceleration = distance * spring
+  spans.forEach((span, i) => {
+    const rect = span.getBoundingClientRect();
+    const state = lineStates[i];
+
+    // Only apply bounce if cursor is vertically over this line
+    let desiredX = 0;
+    if (isMouseInside && cursorY >= rect.top && cursorY <= rect.bottom) {
+      const xNorm = (cursorX / window.innerWidth - 0.5) * 2; // -1 to 1
+      desiredX = xNorm * maxOffset;
+    }
+
     const ax = (desiredX - state.x) * spring;
-    state.vx = (state.vx + ax) * damping; // velocity update with damping
-    state.x += state.vx; // update position
-    spans[i].style.transform = `translateX(${state.x}px)`;
+    state.vx = (state.vx + ax) * damping;
+    state.x += state.vx;
+    span.style.transform = `translateX(${state.x}px)`;
   });
+
   requestAnimationFrame(animate);
 }
 
