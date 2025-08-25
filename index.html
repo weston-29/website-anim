@@ -20,7 +20,7 @@
     font-size: 14px;
     white-space: pre;
     text-align: center;
-    line-height: 0.8; /* less than 1 = lines closer vertically */
+    line-height: 0.9; /* tighter spacing */
   }
   .ascii-line {
     display: block;
@@ -38,7 +38,7 @@ const asciiArt = `
 ██     ██  ██  ██      
 ██  █  ██  ██ ██       
 ██ ███ ██  ██  ██      
- ██   ██   ██    ██  ██
+ ███ ███   ██    ██  ██
 `;
 
 const symbols = '!@#$%&/+';
@@ -80,7 +80,7 @@ window.onload = scramble;
 // ----- Bounce Physics -----
 const spring = 0.2;
 const damping = 0.7;
-const maxOffset = 30;
+const maxOffset = 30; // max lateral movement
 
 const lineStates = Array.from(spans).map(() => ({ x: 0, vx: 0 }));
 
@@ -98,21 +98,29 @@ document.addEventListener("mouseleave", () => {
   isMouseInside = false;
 });
 
+// Animation loop
 function animate() {
   spans.forEach((span, i) => {
     const rect = span.getBoundingClientRect();
     const state = lineStates[i];
 
-    // Only apply bounce if cursor is vertically over this line
     let desiredX = 0;
+
+    // Only bounce if cursor is vertically over this line
     if (isMouseInside && cursorY >= rect.top && cursorY <= rect.bottom) {
-      const xNorm = (cursorX / window.innerWidth - 0.5) * 2; // -1 to 1
-      desiredX = xNorm * maxOffset;
+      const lineCenterX = rect.left + rect.width / 2;
+      const distance = Math.abs(cursorX - lineCenterX);
+      const maxDistance = rect.width; // full line width
+      const proximity = Math.max(0, 1 - distance / maxDistance); // stronger when closer
+      const direction = cursorX < lineCenterX ? -1 : 1; // move away from cursor
+      desiredX = direction * proximity * maxOffset;
     }
 
+    // Spring physics
     const ax = (desiredX - state.x) * spring;
     state.vx = (state.vx + ax) * damping;
     state.x += state.vx;
+
     span.style.transform = `translateX(${state.x}px)`;
   });
 
