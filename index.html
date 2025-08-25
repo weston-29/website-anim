@@ -26,14 +26,9 @@
     #ascii.settling {
       transition: transform 1.2s ease-out;
     }
-    .cursor {
-      display: inline-block;
-      width: 8px;
-      background: limegreen;
-      animation: blink 0.7s steps(1) infinite;
-    }
-    @keyframes blink {
-      50% { background: transparent; }
+    .ascii-line {
+      display: block;
+      transition: transform 0.2s ease-out;
     }
   </style>
 </head>
@@ -43,48 +38,51 @@
     const ascii = document.getElementById("ascii");
 
     const asciiArt = `
-██     ██  ██    ██    
-██     ██  ██  ██      
-██  █  ██  ██ ██       
-██ ███ ██  ██  ██      
- ███ ███   ██    ██  ██
+██     ██ ███████ ███████ ████████  ██████  ███    ██    ██   ██ ███████ ██      ██      ███████ ██████  
+██     ██ ██      ██         ██    ██    ██ ████   ██    ██  ██  ██      ██      ██      ██      ██   ██ 
+██  █  ██ █████   ███████    ██    ██    ██ ██  ██ ██    ██ ██   █████   ██      ██      █████   ███ ██  
+██ ███ ██ ██           ██    ██    ██    ██ ██   ████    ██  ██  ██      ██      ██      ██      ██   ██ 
+ ███ ███  ███████ ███████    ██     ██████  ██    ███    ██   ██ ███████ ███████ ███████ ███████ ██    ██
 `;
 
-    const symbols = '!@#$%&/+'; // symbols to cycle through
-    let displayArray = asciiArt.split('').map(char => char === '\n' ? '\n' : ' ');
+    const symbols = '!@#$%&/+';
+    const lines = asciiArt.split('\n');
+    const displayLines = lines.map(line => line.split('').map(c => c === ' ' ? ' ' : ' ').join(''));
+    
+    ascii.innerHTML = displayLines.map(line => `<span class="ascii-line">${line}</span>`).join('\n');
+
+    let iteration = 0;
+    const totalIterations = 30;
 
     function randomSymbol() {
       return symbols[Math.floor(Math.random() * symbols.length)];
     }
 
-    let iteration = 0;
-    const totalIterations = 30; // controls speed/length of scramble
-
     function scramble() {
-      let output = '';
-      for (let i = 0; i < asciiArt.length; i++) {
-        if (asciiArt[i] === '\n') {
-          output += '\n';
-        } else if (Math.random() < (1 - iteration / totalIterations)) {
-          // high chance to scramble early, lower later
-          output += randomSymbol();
-        } else {
-          output += asciiArt[i];
+      const spans = ascii.querySelectorAll('.ascii-line');
+      spans.forEach((span, i) => {
+        const line = lines[i];
+        let output = '';
+        for (let j = 0; j < line.length; j++) {
+          if (line[j] === '\n') {
+            output += '\n';
+          } else if (Math.random() < (1 - iteration / totalIterations)) {
+            output += randomSymbol();
+          } else {
+            output += line[j];
+          }
         }
-      }
-      ascii.textContent = output;
+        span.textContent = output;
+      });
       iteration++;
       if (iteration <= totalIterations) {
-        setTimeout(scramble, 50); // adjust for speed
+        setTimeout(scramble, 50);
       }
     }
 
-    // Start animation on load
-    window.onload = () => {
-      scramble();
-    };
+    window.onload = scramble;
 
-    // Mouse tilt interactions
+    // Mouse line-level parallax
     let isMouseInside = false;
     document.addEventListener("mouseenter", () => {
       isMouseInside = true;
@@ -93,16 +91,23 @@
     document.addEventListener("mouseleave", () => {
       isMouseInside = false;
       ascii.classList.add("settling");
-      ascii.style.transform = `rotateX(0deg) rotateY(0deg)`;
+      const spans = ascii.querySelectorAll('.ascii-line');
+      spans.forEach(span => span.style.transform = `translate(${0}px, ${0}px)`);
       setTimeout(() => ascii.classList.remove("settling"), 1200);
     });
+
     document.addEventListener("mousemove", (e) => {
       if (!isMouseInside) return;
       const { innerWidth, innerHeight } = window;
-      const x = (e.clientX / innerWidth - 0.5) * 2;
-      const y = (e.clientY / innerHeight - 0.5) * 2;
-      const maxTilt = 15;
-      ascii.style.transform = `rotateX(${y * -maxTilt}deg) rotateY(${x * maxTilt}deg)`;
+      const x = (e.clientX / innerWidth - 0.5) * 2; // -1 to 1
+      const y = (e.clientY / innerHeight - 0.5) * 2; // -1 to 1
+      const spans = ascii.querySelectorAll('.ascii-line');
+
+      spans.forEach((span, i) => {
+        const factor = (i + 1) / spans.length; // stagger lines slightly
+        const maxOffset = 15; // px
+        span.style.transform = `translate(${x * maxOffset * factor}px, ${y * maxOffset * factor}px)`;
+      });
     });
   </script>
 </body>
