@@ -2,37 +2,77 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>ASCII Animation</title>
-  <script src="https://cdn.jsdelivr.net/npm/typed.js@2.0.12"></script>
+  <title>Weston Keller ASCII</title>
   <style>
     body {
-      background: black;
-      color: limegreen;
+      background: white;
+      color: #7A45FF;
       font-family: monospace;
-      white-space: pre;
+      height: 100vh;
+      margin: 0;
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
+      perspective: 800px;
+      overflow: hidden;
     }
     #ascii {
-      font-size: 16px;
+      font-size: 14px;   /* adjust for size */
+      white-space: pre;
       text-align: center;
+      transition: transform 0.1s ease-out;
+      transform-style: preserve-3d;
+    }
+    .cursor {
+      display: inline-block;
+      width: 8px;
+      background: limegreen;
+      animation: blink 0.7s steps(1) infinite;
+    }
+    @keyframes blink {
+      50% { background: transparent; }
     }
   </style>
 </head>
 <body>
-  <div id="ascii"></div>
+  <pre id="ascii"></pre>
 
   <script>
-    new Typed('#ascii', {
-      strings: [
-        "╔═══╗ ♪\n║███║ ♫\n║ (●) ♫\n╚═══╝♪♪",
-        "ASCII animations\nlook cool in Google Sites!"
-      ],
-      typeSpeed: 50,
-      backSpeed: 25,
-      loop: true
+    const ascii = document.getElementById("ascii");
+
+    // The ASCII art to type out
+    const asciiArt = `
+██     ██ ███████ ███████ ████████  ██████  ███    ██ 
+██     ██ ██      ██        ██     ██    ██ ████   ██ 
+██  █  ██ █████   ███████   ██     ██    ██ ██ ██  ██ 
+██ ███ ██ ██           ██   ██     ██    ██ ██   ████ 
+ ███ ███  ███████ ███████   ██      ██████  ██    ███ 
+`;
+
+    let index = 0;
+    const typingSpeed = 5; // ms per character
+
+    function typeArt() {
+      if (index < asciiArt.length) {
+        ascii.textContent = asciiArt.slice(0, index + 1);
+        index++;
+        setTimeout(typeArt, typingSpeed);
+      }
+    }
+
+    // Start typing on load
+    window.onload = () => {
+      typeArt();
+    };
+
+    // Cursor-driven tilt
+    document.addEventListener("mousemove", (e) => {
+      const { innerWidth, innerHeight } = window;
+      const x = (e.clientX / innerWidth - 0.5) * 2;  // -1 to 1
+      const y = (e.clientY / innerHeight - 0.5) * 2; // -1 to 1
+      const maxTilt = 15; // degrees
+
+      ascii.style.transform = `rotateX(${y * -maxTilt}deg) rotateY(${x * maxTilt}deg)`;
     });
   </script>
 </body>
