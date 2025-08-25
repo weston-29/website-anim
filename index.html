@@ -17,13 +17,12 @@
       overflow: hidden;
     }
     #ascii {
-      font-size: 14px;   /* adjust for size */
+      font-size: 14px;
       white-space: pre;
       text-align: center;
       transition: transform 0.1s ease-out;
       transform-style: preserve-3d;
     }
-    /* Smooth settle transition when mouse leaves */
     #ascii.settling {
       transition: transform 1.2s ease-out;
     }
@@ -42,7 +41,7 @@
   <pre id="ascii"></pre>
   <script>
     const ascii = document.getElementById("ascii");
-     // ANSI Shadow for "WESTON KELLER"
+
     const asciiArt = `
 ██     ██ ███████ ███████ ████████  ██████  ███    ██    ██   ██ ███████ ██      ██      ███████ ██████  
 ██     ██ ██      ██         ██    ██    ██ ████   ██    ██  ██  ██      ██      ██      ██      ██   ██ 
@@ -50,50 +49,59 @@
 ██ ███ ██ ██           ██    ██    ██    ██ ██   ████    ██  ██  ██      ██      ██      ██      ██   ██ 
  ███ ███  ███████ ███████    ██     ██████  ██    ███    ██   ██ ███████ ███████ ███████ ███████ ██    ██
 `;
-    let index = 0;
-    const typingSpeed = 5; // ms per character
-    let isMouseInside = false;
-    
-    function typeArt() {
-      if (index < asciiArt.length) {
-        ascii.textContent = asciiArt.slice(0, index + 1);
-        index++;
-        setTimeout(typeArt, typingSpeed);
+
+    const symbols = '!@#$%&/+'; // symbols to cycle through
+    let displayArray = asciiArt.split('').map(char => char === '\n' ? '\n' : ' ');
+
+    function randomSymbol() {
+      return symbols[Math.floor(Math.random() * symbols.length)];
+    }
+
+    let iteration = 0;
+    const totalIterations = 30; // controls speed/length of scramble
+
+    function scramble() {
+      let output = '';
+      for (let i = 0; i < asciiArt.length; i++) {
+        if (asciiArt[i] === '\n') {
+          output += '\n';
+        } else if (Math.random() < (1 - iteration / totalIterations)) {
+          // high chance to scramble early, lower later
+          output += randomSymbol();
+        } else {
+          output += asciiArt[i];
+        }
+      }
+      ascii.textContent = output;
+      iteration++;
+      if (iteration <= totalIterations) {
+        setTimeout(scramble, 50); // adjust for speed
       }
     }
-    
-    // Start typing on load
+
+    // Start animation on load
     window.onload = () => {
-      typeArt();
+      scramble();
     };
-    
-    // Track mouse enter/leave
+
+    // Mouse tilt interactions
+    let isMouseInside = false;
     document.addEventListener("mouseenter", () => {
       isMouseInside = true;
       ascii.classList.remove("settling");
     });
-    
     document.addEventListener("mouseleave", () => {
       isMouseInside = false;
       ascii.classList.add("settling");
-      // Smoothly return to original position
       ascii.style.transform = `rotateX(0deg) rotateY(0deg)`;
-      
-      // Remove settling class after animation completes
-      setTimeout(() => {
-        ascii.classList.remove("settling");
-      }, 1200);
+      setTimeout(() => ascii.classList.remove("settling"), 1200);
     });
-    
-    // Cursor-driven tilt (only when mouse is inside)
     document.addEventListener("mousemove", (e) => {
       if (!isMouseInside) return;
-      
       const { innerWidth, innerHeight } = window;
-      const x = (e.clientX / innerWidth - 0.5) * 2;  // -1 to 1
-      const y = (e.clientY / innerHeight - 0.5) * 2; // -1 to 1
-      const maxTilt = 15; // degrees
-      
+      const x = (e.clientX / innerWidth - 0.5) * 2;
+      const y = (e.clientY / innerHeight - 0.5) * 2;
+      const maxTilt = 15;
       ascii.style.transform = `rotateX(${y * -maxTilt}deg) rotateY(${x * maxTilt}deg)`;
     });
   </script>
