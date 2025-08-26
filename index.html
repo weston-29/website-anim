@@ -39,14 +39,14 @@ const asciiArt = `
 ██ ███ ██  ██  ██      
  ██   ██   ██    ██  ██
 `;
-const symbols = '!@#$%&/+?~=';
+const symbols = '!@#$%&*+=~∆˚¬≈¢∞§';
 // Split lines and wrap in spans
 const lines = asciiArt.trim().split('\n');
 ascii.innerHTML = lines.map(line => `<span class="ascii-line">${line}</span>`).join('\n');
 const spans = ascii.querySelectorAll('.ascii-line');
 // ----- Scramble Animation -----
 let iteration = 0;
-const totalIterations = 30;
+const totalIterations = 40;
 function randomSymbol() {
   return symbols[Math.floor(Math.random() * symbols.length)];
 }
