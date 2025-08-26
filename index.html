@@ -39,7 +39,7 @@ const asciiArt = `
 ██ ███ ██  ██  ██      
  ██   ██   ██    ██  ██
 `;
-const symbols = '!@#$%&*+=~∆˚¬≈¢∞§';
+const symbols = '!@#$%&*+=~˚≈¢∞§░';
 // Split lines and wrap in spans
 const lines = asciiArt.trim().split('\n');
 ascii.innerHTML = lines.map(line => `<span class="ascii-line">${line}</span>`).join('\n');
@@ -75,7 +75,8 @@ function scramble() {
   });
   iteration++;
   if (iteration <= totalIterations) {
-    setTimeout(scramble, 50);
+    const delay = 50 * Math.pow(1.05, iteration); // Starts at 50ms, grows exponentially
+    setTimeout(scramble, delay);
   }
 }
 window.onload = scramble;
