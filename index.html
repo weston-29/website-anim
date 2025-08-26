@@ -32,17 +32,17 @@
 <pre id="ascii"></pre>
 <script>
 const ascii = document.getElementById("ascii");
-const asciiArt = 
+const asciiArt = `
 ██     ██  ██    ██    
 ██     ██  ██  ██      
 ██  █  ██  ██ ██       
 ██ ███ ██  ██  ██      
  ██   ██   ██    ██  ██
-;
+`;
 const symbols = '!@#$%&/+?~=';
 // Split lines and wrap in spans
 const lines = asciiArt.trim().split('\n');
-ascii.innerHTML = lines.map(line => <span class="ascii-line">${line}</span>).join('\n');
+ascii.innerHTML = lines.map(line => `<span class="ascii-line">${line}</span>`).join('\n');
 const spans = ascii.querySelectorAll('.ascii-line');
 // ----- Scramble Animation -----
 let iteration = 0;
@@ -51,6 +51,15 @@ function randomSymbol() {
   return symbols[Math.floor(Math.random() * symbols.length)];
 }
 function scramble() {
+  // Color interpolation from orange (#fab641) to black (#000000)
+  const startColor = { r: 255, g: 255, b: 255 };  // #ffffff
+  const endColor = { r: 99, g: 0, b: 0 };         // red wine
+  
+  const progress = iteration / totalIterations;
+  const r = Math.round(startColor.r + (endColor.r - startColor.r) * progress);
+  const g = Math.round(startColor.g + (endColor.g - startColor.g) * progress);
+  const b = Math.round(startColor.b + (endColor.b - startColor.b) * progress);
+  
   spans.forEach((span, i) => {
     const line = lines[i];
     let output = '';
@@ -62,6 +71,7 @@ function scramble() {
       }
     }
     span.textContent = output;
+    span.style.color = `rgb(${r}, ${g}, ${b})`;
   });
   iteration++;
   if (iteration <= totalIterations) {
@@ -98,7 +108,7 @@ function animate() {
     const ax = (desiredX - state.x) * spring;
     state.vx = (state.vx + ax) * damping;
     state.x += state.vx;
-    span.style.transform = translateX(${state.x}px);
+    span.style.transform = `translateX(${state.x}px)`;
   });
   requestAnimationFrame(animate);
 }
