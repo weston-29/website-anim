@@ -46,7 +46,7 @@ ascii.innerHTML = lines.map(line => `<span class="ascii-line">${line}</span>`).j
 const spans = ascii.querySelectorAll('.ascii-line');
 // ----- Scramble Animation -----
 let iteration = 0;
-const totalIterations = 40;
+const totalIterations = 35;
 function randomSymbol() {
   return symbols[Math.floor(Math.random() * symbols.length)];
 }
@@ -104,7 +104,7 @@ function animate() {
     let desiredX = 0;
     if (isMouseInside && cursorY >= rect.top && cursorY <= rect.bottom) {
       const xNorm = (cursorX / window.innerWidth - 0.5) * 2; // -1 to 1
-      desiredX = xNorm * maxOffset;
+      desiredX = -xNorm * maxOffset;
     }
     const ax = (desiredX - state.x) * spring;
     state.vx = (state.vx + ax) * damping;
